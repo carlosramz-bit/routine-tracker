@@ -1,0 +1,345 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .app { padding: 1.5rem 1rem; max-width: 680px; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+  .header-left h1 { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .header-left p { font-size: 13px; color: var(--color-text-secondary); margin-top: 3px; }
+  .date-badge { font-size: 12px; color: var(--color-text-secondary); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 6px 12px; }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem; }
+  .habits-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+  .habit-card { display: flex; align-items: center; gap: 12px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px 16px; cursor: pointer; transition: border-color 0.15s; user-select: none; }
+  .habit-card:hover { border-color: var(--color-border-secondary); }
+  .habit-card.done { background: var(--color-background-success); border-color: var(--color-border-success); }
+  .check-ring { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--color-border-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .habit-card.done .check-ring { background: var(--color-background-success); border-color: var(--color-text-success); }
+  .check-ring i { font-size: 14px; color: var(--color-text-tertiary); opacity: 0; transition: opacity 0.15s; }
+  .habit-card.done .check-ring i { color: var(--color-text-success); opacity: 1; }
+  .habit-info { flex: 1; }
+  .habit-name { font-size: 15px; font-weight: 400; color: var(--color-text-primary); }
+  .habit-card.done .habit-name { color: var(--color-text-secondary); text-decoration: line-through; text-decoration-color: var(--color-text-tertiary); }
+  .habit-meta { font-size: 12px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .habit-right { display: flex; align-items: center; gap: 8px; }
+  .streak { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
+  .streak i { font-size: 14px; color: #EF9F27; }
+  .delete-btn { width: 24px; height: 24px; border-radius: 50%; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.1s; }
+  .habit-card:hover .delete-btn { opacity: 1; }
+  .delete-btn i { font-size: 14px; color: var(--color-text-tertiary); }
+  .delete-btn:hover i { color: var(--color-text-danger); }
+  .progress-section { margin-bottom: 1.5rem; }
+  .progress-bar-wrap { background: var(--color-background-secondary); border-radius: 100px; height: 8px; overflow: hidden; margin-top: 8px; }
+  .progress-bar-fill { height: 100%; border-radius: 100px; background: #1D9E75; transition: width 0.4s cubic-bezier(.4,0,.2,1); }
+  .progress-label { display: flex; justify-content: space-between; align-items: center; }
+  .progress-text { font-size: 13px; color: var(--color-text-secondary); }
+  .progress-pct { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 1.5rem; }
+  .week-day { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .day-label { font-size: 10px; color: var(--color-text-tertiary); font-weight: 500; letter-spacing: 0.04em; }
+  .day-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--color-text-tertiary); }
+  .day-dot.today { border-color: #1D9E75; color: #1D9E75; font-weight: 500; }
+  .day-dot.completed { background: #1D9E75; border-color: #1D9E75; color: #fff; }
+  .day-dot.partial { background: #9FE1CB; border-color: #5DCAA5; color: #085041; }
+  .add-section { background: var(--color-background-secondary); border: 0.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 14px 16px; }
+  .add-row { display: flex; gap: 8px; align-items: center; }
+  .add-input { flex: 1; background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 8px 12px; font-size: 14px; color: var(--color-text-primary); outline: none; font-family: var(--font-sans); }
+  .add-input:focus { border-color: #1D9E75; }
+  .add-input::placeholder { color: var(--color-text-tertiary); }
+  .emoji-pick { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .emoji-btn { width: 32px; height: 32px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: border-color 0.1s; }
+  .emoji-btn.selected { border-color: #1D9E75; background: #E1F5EE; }
+  .time-tags { display: flex; gap: 6px; margin-top: 8px; }
+  .tag { padding: 4px 10px; border-radius: 100px; border: 0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); font-size: 12px; color: var(--color-text-secondary); cursor: pointer; }
+  .tag.selected { background: #E1F5EE; border-color: #1D9E75; color: #085041; }
+  .add-confirm-btn { padding: 8px 16px; background: #1D9E75; color: #fff; border: none; border-radius: var(--border-radius-md); font-size: 14px; cursor: pointer; font-family: var(--font-sans); white-space: nowrap; }
+  .add-confirm-btn:hover { background: #0F6E56; }
+  .empty-state { text-align: center; padding: 2rem 1rem; color: var(--color-text-tertiary); font-size: 14px; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+  .stat-label { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-sub { font-size: 11px; color: var(--color-text-tertiary); margin-top: 2px; }
+</style>
+
+<div class="app">
+  <h2 class="sr-only">Daily routine tracker — check off habits and track your weekly progress</h2>
+
+  <div class="header">
+    <div class="header-left">
+      <h1>Daily routines</h1>
+      <p id="greeting">Good morning — let's have a great day.</p>
+    </div>
+    <div class="date-badge" id="date-badge"></div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">Today</div>
+      <div class="stat-val" id="stat-today">0/0</div>
+      <div class="stat-sub">completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Best streak</div>
+      <div class="stat-val" id="stat-streak">0</div>
+      <div class="stat-sub">days in a row</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">This week</div>
+      <div class="stat-val" id="stat-week">0%</div>
+      <div class="stat-sub">completion rate</div>
+    </div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-label">
+      <span class="progress-text">Today's progress</span>
+      <span class="progress-pct" id="pct-label">0%</span>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="prog-bar" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="section-label">This week</div>
+  <div class="week-grid" id="week-grid"></div>
+
+  <div class="section-label">Habits</div>
+  <div class="habits-grid" id="habits-list"></div>
+
+  <div class="add-section">
+    <div class="add-row">
+      <input class="add-input" id="new-habit-input" placeholder="Add a new habit..." maxlength="50" />
+      <button class="add-confirm-btn" id="add-btn">Add</button>
+    </div>
+    <div class="emoji-pick" id="emoji-pick"></div>
+    <div class="time-tags" id="time-tags"></div>
+  </div>
+</div>
+
+<script>
+const EMOJIS = ['🌅','💧','🏃','📖','🧘','🥗','😴','💊','🎯','✍️','🎨','🎵'];
+const TIMES = ['Morning','Afternoon','Evening','Anytime'];
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+let state = {
+  habits: [],
+  completions: {},
+  selectedEmoji: '🎯',
+  selectedTime: 'Anytime'
+};
+
+function todayKey() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function loadState() {
+  try {
+    const raw = window._rtData;
+    if (raw) state = { ...state, ...JSON.parse(raw) };
+  } catch(e) {}
+}
+
+function saveState() {
+  window._rtData = JSON.stringify(state);
+}
+
+async function persist() {
+  try { await window.storage.set('routine-tracker-v1', JSON.stringify(state)); } catch(e) {}
+  saveState();
+}
+
+async function hydrate() {
+  try {
+    const r = await window.storage.get('routine-tracker-v1');
+    if (r && r.value) state = { ...state, ...JSON.parse(r.value) };
+  } catch(e) {}
+}
+
+function getToday() {
+  return state.completions[todayKey()] || {};
+}
+
+function setToday(map) {
+  state.completions[todayKey()] = map;
+}
+
+function calcBestStreak() {
+  if (!state.habits.length) return 0;
+  let best = 0, cur = 0;
+  const today = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    const comp = state.completions[key] || {};
+    const done = state.habits.filter(h => comp[h.id]).length;
+    const total = state.habits.length;
+    if (total > 0 && done === total) { cur++; best = Math.max(best, cur); }
+    else cur = 0;
+  }
+  return best;
+}
+
+function calcWeekPct() {
+  if (!state.habits.length) return 0;
+  let total = 0, done = 0;
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    const comp = state.completions[key] || {};
+    state.habits.forEach(h => { total++; if (comp[h.id]) done++; });
+  }
+  return total ? Math.round(done / total * 100) : 0;
+}
+
+function render() {
+  const today = getToday();
+  const done = state.habits.filter(h => today[h.id]).length;
+  const total = state.habits.length;
+  const pct = total ? Math.round(done / total * 100) : 0;
+
+  document.getElementById('prog-bar').style.width = pct + '%';
+  document.getElementById('pct-label').textContent = pct + '%';
+  document.getElementById('stat-today').textContent = done + '/' + total;
+  document.getElementById('stat-streak').textContent = calcBestStreak();
+  document.getElementById('stat-week').textContent = calcWeekPct() + '%';
+
+  const list = document.getElementById('habits-list');
+  if (!state.habits.length) {
+    list.innerHTML = '<div class="empty-state"><i class="ti ti-list-check" style="font-size:28px; display:block; margin-bottom:8px; opacity:0.4" aria-hidden="true"></i>No habits yet — add your first one below.</div>';
+  } else {
+    list.innerHTML = state.habits.map(h => `
+      <div class="habit-card ${today[h.id] ? 'done' : ''}" data-id="${h.id}" role="button" tabindex="0" aria-label="${h.name}, ${today[h.id] ? 'done' : 'not done'}">
+        <div class="check-ring"><i class="ti ti-check" aria-hidden="true"></i></div>
+        <div class="habit-info">
+          <div class="habit-name">${h.emoji} ${h.name}</div>
+          <div class="habit-meta">${h.time}</div>
+        </div>
+        <div class="habit-right">
+          <div class="streak"><i class="ti ti-flame" aria-hidden="true"></i>${getHabitStreak(h.id)}</div>
+          <button class="delete-btn" data-del="${h.id}" aria-label="Remove ${h.name}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  renderWeek();
+  renderEmojiPick();
+  renderTimeTags();
+
+  const now = new Date().getHours();
+  const greet = now < 12 ? 'Good morning' : now < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = greet + ' — let\'s have a great day.';
+
+  const dateEl = document.getElementById('date-badge');
+  const opts = { weekday: 'short', month: 'short', day: 'numeric' };
+  dateEl.textContent = new Date().toLocaleDateString(undefined, opts);
+}
+
+function getHabitStreak(id) {
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0,10);
+    if (i === 0) {
+      const comp = state.completions[key] || {};
+      if (!comp[id] && streak === 0) continue;
+    }
+    const comp = state.completions[key] || {};
+    if (comp[id]) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function renderWeek() {
+  const grid = document.getElementById('week-grid');
+  const today = new Date();
+  const todayKey2 = todayKey();
+  grid.innerHTML = Array.from({length:7}, (_,i) => {
+    const d = new Date(today); d.setDate(today.getDate() - 6 + i);
+    const key = d.toISOString().slice(0,10);
+    const comp = state.completions[key] || {};
+    const done = state.habits.filter(h => comp[h.id]).length;
+    const total = state.habits.length;
+    const isToday = key === todayKey2;
+    let dotClass = 'day-dot';
+    if (total > 0 && done === total) dotClass += ' completed';
+    else if (total > 0 && done > 0) dotClass += ' partial';
+    if (isToday) dotClass += ' today';
+    return `<div class="week-day"><div class="day-label">${DAYS[d.getDay()]}</div><div class="${dotClass}" title="${done}/${total} on ${key}">${d.getDate()}</div></div>`;
+  }).join('');
+}
+
+function renderEmojiPick() {
+  document.getElementById('emoji-pick').innerHTML = EMOJIS.map(e =>
+    `<button class="emoji-btn ${state.selectedEmoji === e ? 'selected' : ''}" data-emoji="${e}" aria-label="${e}">${e}</button>`
+  ).join('');
+}
+
+function renderTimeTags() {
+  document.getElementById('time-tags').innerHTML = TIMES.map(t =>
+    `<div class="tag ${state.selectedTime === t ? 'selected' : ''}" data-time="${t}">${t}</div>`
+  ).join('');
+}
+
+document.getElementById('habits-list').addEventListener('click', async e => {
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    const id = del.getAttribute('data-del');
+    state.habits = state.habits.filter(h => h.id !== id);
+    await persist(); render(); return;
+  }
+  const card = e.target.closest('.habit-card');
+  if (card) {
+    const id = card.getAttribute('data-id');
+    const today = getToday();
+    today[id] = !today[id];
+    setToday(today);
+    await persist(); render();
+  }
+});
+
+document.getElementById('habits-list').addEventListener('keydown', async e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const card = e.target.closest('.habit-card');
+    if (card) { e.preventDefault(); card.click(); }
+  }
+});
+
+document.getElementById('emoji-pick').addEventListener('click', e => {
+  const btn = e.target.closest('[data-emoji]');
+  if (btn) { state.selectedEmoji = btn.getAttribute('data-emoji'); render(); }
+});
+
+document.getElementById('time-tags').addEventListener('click', e => {
+  const tag = e.target.closest('[data-time]');
+  if (tag) { state.selectedTime = tag.getAttribute('data-time'); render(); }
+});
+
+document.getElementById('add-btn').addEventListener('click', async () => {
+  const input = document.getElementById('new-habit-input');
+  const name = input.value.trim();
+  if (!name) return;
+  state.habits.push({ id: Date.now().toString(), name, emoji: state.selectedEmoji, time: state.selectedTime });
+  input.value = '';
+  await persist(); render();
+});
+
+document.getElementById('new-habit-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('add-btn').click();
+});
+
+(async () => {
+  await hydrate();
+  if (!state.habits.length) {
+    state.habits = [
+      { id: '1', name: 'Drink 8 glasses of water', emoji: '💧', time: 'Anytime' },
+      { id: '2', name: 'Morning workout', emoji: '🏃', time: 'Morning' },
+      { id: '3', name: 'Read for 20 minutes', emoji: '📖', time: 'Evening' },
+    ];
+  }
+  render();
+})();
+</script>
